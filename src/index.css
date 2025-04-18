@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* @layer base {
+  body {
+    @applybg-gradient-to-r from-purple-400 via-blue-300 to-blue-500
+
+
+  }
+} */
+/* Link to Google Fonts should be added in the HTML file, not in CSS */
