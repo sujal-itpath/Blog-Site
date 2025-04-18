@@ -91,7 +91,10 @@ const Feedback = () => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
-                    sx={textFieldStyle}
+                    sx={{
+                      ...textFieldStyle,
+                      width: { md: "260px" },
+                    }}
                   />
                 </Grid>
 
@@ -105,11 +108,12 @@ const Feedback = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    sx={textFieldStyle}
+                    sx={{
+                      ...textFieldStyle,
+                      width: { md: "260px" },
+                    }}
                   />
                 </Grid>
-
-                {/* Rating */}
                 
 
                 {/* Feedback Field */}
