@@ -110,28 +110,7 @@ const Feedback = () => {
                 </Grid>
 
                 {/* Rating */}
-                <Grid item xs={12}>
-                  <Typography
-                    variant="h6"
-                    gutterBottom
-                    align="center"
-                    sx={{ color: "#333", fontWeight: 500 }}
-                  >
-                    Rate your experience
-                  </Typography>
-                  <Rating
-                    name="rating"
-                    value={rating}
-                    onChange={(event, newValue) => setRating(newValue)}
-                    size="large"
-                    sx={{
-                      "& .MuiRating-iconFilled": { color: "#9333ea" },
-                      "& .MuiRating-iconHover": { color: "#7e22ce" },
-                      display: "flex",
-                      justifyContent: "center", // Ensures it's centered
-                    }}
-                  />
-                </Grid>
+                
 
                 {/* Feedback Field */}
                 <Grid item xs={12}>
