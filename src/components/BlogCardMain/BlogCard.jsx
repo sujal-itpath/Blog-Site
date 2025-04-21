@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -12,7 +13,8 @@ import {
 import { motion } from 'framer-motion';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useBlogCard } from './useBlogCard';
+import useBlogCard from './useBlogCard';
+import { useAuthor } from '../../context/AuthorContext';
 
 // Animation variants
 const cardVariants = {
@@ -28,18 +30,22 @@ const cardVariants = {
   },
 };
 
-const BlogCard = ({ blog, index, onEdit, onDelete }) => {
+const BlogCard = ({ blog, index, onDelete }) => {
+  const navigate = useNavigate();
   const {
+    image,
     authorName,
     authorImage,
     publishDate,
     readTime,
     category,
-    image,
-    handleBlogClick,
     handleEditClick,
-    handleDeleteClick
-  } = useBlogCard(blog, index, onEdit, onDelete);
+    handleDeleteClick,
+  } = useBlogCard(blog);
+
+  const handleBlogClick = () => {
+    navigate(`/blog/${blog.id}`);
+  };
 
   return (
     <Grid item xs={12} sm={6} md={4}>
@@ -90,7 +96,10 @@ const BlogCard = ({ blog, index, onEdit, onDelete }) => {
               }}
             >
               <IconButton
-                onClick={(e) => handleEditClick(e, blog)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditClick(e);
+                }}
                 sx={{ 
                   bgcolor: 'rgba(255, 255, 255, 0.9)',
                   width: 36,
@@ -106,7 +115,10 @@ const BlogCard = ({ blog, index, onEdit, onDelete }) => {
                 <EditIcon fontSize="small" />
               </IconButton>
               <IconButton
-                onClick={(e) => handleDeleteClick(e, blog)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(blog.id);
+                }}
                 sx={{
                   bgcolor: 'rgba(255, 255, 255, 0.9)',
                   width: 36,
@@ -198,7 +210,7 @@ const BlogCard = ({ blog, index, onEdit, onDelete }) => {
                     variant="caption"
                     className="text-gray-500"
                   >
-                    {authorName}
+                    {blog.author || authorName}
                   </Typography>
                 </Box>
                 <Box className="flex items-center gap-2">

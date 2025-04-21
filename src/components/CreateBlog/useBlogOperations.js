@@ -1,5 +1,4 @@
-import { useDispatch } from 'react-redux';
-import { blogApiSlice } from '../../redux/api/blogApiSlice';
+import { useBlog } from "../../context/BlogContext";
 
 export const useBlogOperations = ({
   formData,
@@ -7,17 +6,13 @@ export const useBlogOperations = ({
   blogToEdit,
   navigate,
   setIsSubmitting,
-  setApiError
+  setApiError,
 }) => {
-  const dispatch = useDispatch();
+  const { createBlog, updateBlog, refetchBlogs } = useBlog();
 
   const getLocalBlogs = () => {
     const blogs = localStorage.getItem("localBlogs");
     return blogs ? JSON.parse(blogs) : [];
-  };
-
-  const saveLocalBlogs = (blogs) => {
-    localStorage.setItem("localBlogs", JSON.stringify(blogs));
   };
 
   const handleChange = (e) => {
@@ -40,20 +35,21 @@ export const useBlogOperations = ({
 
   const handleEditorChange = (content) => {
     const cleanedContent = content
-      .replace(/<p><br\s*\/?><\/p>/gi, '')
-      .replace(/<p>\s*<\/p>/gi, '')
-      .replace(/\s+/g, ' ')
+      .replace(/<p><br\s*\/?><\/p>/gi, "")
+      .replace(/<p>\s*<\/p>/gi, "")
+      .replace(/\s+/g, " ")
       .trim();
-    
+
     setFormData((prev) => ({ ...prev, content: cleanedContent }));
   };
 
   const createLocalBlog = () => {
     const existingBlogs = getLocalBlogs();
-    const maxId = existingBlogs.length > 0 
-      ? Math.max(...existingBlogs.map(blog => blog.id)) 
-      : 100;
-    
+    const maxId =
+      existingBlogs.length > 0
+        ? Math.max(...existingBlogs.map((blog) => blog.id))
+        : 100;
+
     return {
       id: maxId + 1,
       title: formData.title,
@@ -61,12 +57,14 @@ export const useBlogOperations = ({
       author: formData.author,
       publishDate: new Date().toISOString(),
       allowComments: formData.allowComments,
-      image: formData.image ? URL.createObjectURL(formData.image) : `https://picsum.photos/seed/${maxId + 1}/800/400`,
+      image: formData.image
+        ? URL.createObjectURL(formData.image)
+        : `https://picsum.photos/seed/${maxId + 1}/800/400`,
       category: formData.category,
       isLocal: true,
       createdAt: new Date().toISOString(),
-      userId: 999,
-      isNew: true
+      userId: Math.floor(Math.random() * 20) + 1, // Random userId between 1 and 20
+      isNew: true,
     };
   };
 
@@ -74,14 +72,18 @@ export const useBlogOperations = ({
     e.preventDefault();
     setIsSubmitting(true);
     setApiError(null);
-  
+
     try {
-      if (!formData.title.trim() || !formData.content.trim() || !formData.author.trim()) {
+      if (
+        !formData.title.trim() ||
+        !formData.content.trim() ||
+        !formData.author.trim()
+      ) {
         setApiError("Please fill in all required fields");
         setIsSubmitting(false);
         return;
       }
-  
+
       if (blogToEdit) {
         const updateData = {
           id: blogToEdit.id,
@@ -90,39 +92,19 @@ export const useBlogOperations = ({
           author: formData.author,
           publishDate: new Date().toISOString(),
           allowComments: formData.allowComments,
-          image: formData.image ? URL.createObjectURL(formData.image) : blogToEdit.image,
+          image: formData.image
+            ? URL.createObjectURL(formData.image)
+            : blogToEdit.image,
           category: formData.category,
-          isLocal: true
+          isLocal: true,
         };
 
-        const localBlogs = getLocalBlogs();
-        const updatedLocalBlogs = localBlogs.map((blog) =>
-          blog.id === blogToEdit.id ? { ...blog, ...updateData } : blog
-        );
-        saveLocalBlogs(updatedLocalBlogs);
-        
-        dispatch(
-          blogApiSlice.util.updateQueryData('getBlogs', undefined, (draft) => {
-            const index = draft.findIndex((blog) => blog.id === blogToEdit.id);
-            if (index !== -1) {
-              draft[index] = { ...draft[index], ...updateData };
-            }
-          })
-        );
-        
-        navigate("/blog", { state: { refresh: true } });
+        await updateBlog(blogToEdit.id, updateData);
+        navigate("/blog");
       } else {
         const newBlog = createLocalBlog();
-        const localBlogs = getLocalBlogs();
-        saveLocalBlogs([...localBlogs, newBlog]);
-        
-        dispatch(
-          blogApiSlice.util.updateQueryData('getBlogs', undefined, (draft) => {
-            draft.unshift(newBlog);
-          })
-        );
-        
-        navigate("/blog", { state: { refresh: true } });
+        await createBlog(newBlog);
+        navigate("/blog");
       }
     } catch (err) {
       console.error("Error submitting blog:", err);
@@ -136,6 +118,6 @@ export const useBlogOperations = ({
     handleSubmit,
     handleImageChange,
     handleEditorChange,
-    handleChange
+    handleChange,
   };
-}; 
+};

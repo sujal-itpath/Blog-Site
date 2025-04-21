@@ -15,15 +15,11 @@ const DeleteConfirmationDialog = ({
   onConfirm, 
   blogToDelete 
 }) => {
-  const handleConfirm = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleConfirm = () => {
     onConfirm();
   };
 
-  const handleClose = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleClose = () => {
     onClose();
   };
 
@@ -33,11 +29,7 @@ const DeleteConfirmationDialog = ({
       onClose={handleClose}
       aria-labelledby="delete-dialog-title"
       aria-describedby="delete-dialog-description"
-      disablePortal
-      keepMounted={false}
-      onClick={(e) => e.stopPropagation()}
       PaperProps={{
-        onClick: (e) => e.stopPropagation(),
         sx: {
           borderRadius: 2,
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
@@ -50,7 +42,11 @@ const DeleteConfirmationDialog = ({
         </DialogTitle>
         <DialogContent sx={{ pb: 2 }}>
           <Typography id="delete-dialog-description">
-            Are you sure you want to delete "{blogToDelete?.title}"? This action cannot be undone.
+            {blogToDelete ? (
+              <>Are you sure you want to delete "<strong>{blogToDelete.title}</strong>"? This action cannot be undone.</>
+            ) : (
+              "Are you sure you want to delete this blog? This action cannot be undone."
+            )}
           </Typography>
         </DialogContent>
         <DialogActions sx={{ px: 2, pb: 2 }}>

@@ -11,9 +11,8 @@ import {
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useGetBlogsQuery } from '../../redux/api/blogApiSlice';
-import { useSelector } from 'react-redux';
-import { selectAuthors } from '../../redux/api/authorSlice';
+import { useBlog } from '../../context/BlogContext';
+import { useAuthor } from '../../context/AuthorContext';
 
 const floatVariants = {
   initial: { y: 0 },
@@ -30,12 +29,11 @@ const floatVariants = {
 const BlogCards = () => {
   const navigate = useNavigate();
   const itemsPerPage = 3;
-  const authors = useSelector(selectAuthors);
+  const { authors } = useAuthor();
+  const { blogs, loading } = useBlog();
 
-  const { data: blogs = [] } = useGetBlogsQuery();
-
-  const handleCardClick = (blogId) => {
-    navigate(`/blog/${blogId}`);
+  const handleCardClick = () => {
+    navigate('/blog');
   };
 
   const getAuthorByUserId = (userId) => {
@@ -47,17 +45,19 @@ const BlogCards = () => {
   const trendingBlogs = useMemo(() => {
     if (!Array.isArray(blogs)) return [];
     
-    return [...blogs]
+    // Filter out local blogs and only keep API blogs
+    const apiBlogs = blogs.filter(blog => !blog.isLocal);
+    
+    return [...apiBlogs]
       .sort((a, b) => new Date(b.publishDate) - new Date(a.publishDate))
       .slice(0, itemsPerPage)
       .map((blog, index) => {
         // Assign a random userId between 1 and 20 for each blog
         const randomUserId = Math.floor(Math.random() * 20) + 1;
         const author = getAuthorByUserId(randomUserId);
-        console.log('Blog ID:', blog.id, 'Random User ID:', randomUserId, 'Author:', author.name); // Debug log
         return {
           ...blog,
-          userId: randomUserId, // Override the userId with a random one
+          userId: randomUserId,
           image: blog.image || `https://picsum.photos/seed/${blog.id}/400/300`,
           title: blog.title || 'Untitled',
           body: blog.body || 'No description provided...',
@@ -72,6 +72,10 @@ const BlogCards = () => {
         };
       });
   }, [blogs, authors]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <section className="py-12 px-6 md:px-16 lg:px-24">
@@ -102,7 +106,7 @@ const BlogCards = () => {
               whileHover={{ scale: 1.03 }}
               transition={{ type: 'spring', stiffness: 100 }}
               className="max-w-xs w-full cursor-pointer"
-              onClick={() => handleCardClick(blog.id)}
+              onClick={handleCardClick}
             >
               <Card className="rounded-xl overflow-hidden shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm min-h-[420px] flex flex-col justify-between">
                 <Box className="relative h-56 group overflow-hidden">

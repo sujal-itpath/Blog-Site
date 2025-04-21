@@ -19,21 +19,18 @@ import {
 import { Editor } from "@tinymce/tinymce-react";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useSelector } from 'react-redux';
-import { selectCategories } from '../../redux/api/categorySlice';
-import { useBlogOperations } from './useBlogOperations';
+import { useBlog } from '../../context/BlogContext';
+import { useAuthor } from '../../context/AuthorContext';
+
+const categories = ['Technology', 'Travel', 'Food', 'Health', 'Business', 'Entertainment', 'Science', 'Lifestyle', 'Education', 'Sports'];
 
 const CreateBlog = () => {
   const location = useLocation();
   const blogToEdit = location.state?.blogToEdit;
   const navigate = useNavigate();
-  const categoriesFromStore = useSelector(selectCategories);
+  const { authors } = useAuthor();
+  const { createBlog, updateBlog } = useBlog();
   
-  // Fallback categories in case the Redux store is not properly initialized
-  const categories = categoriesFromStore && categoriesFromStore.length > 0 
-    ? categoriesFromStore 
-    : ['Technology', 'Travel', 'Food', 'Health', 'Business', 'Entertainment', 'Science', 'Lifestyle', 'Education', 'Sports'];
-
   const [formData, setFormData] = useState({
     title: "",
     content: "",
@@ -41,37 +38,85 @@ const CreateBlog = () => {
     allowComments: true,
     image: null,
     category: 'Technology', // Default category
+    publishDate: new Date().toISOString(),
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState(null);
 
-  const {
-    handleSubmit: handleBlogSubmit,
-    handleImageChange,
-    handleEditorChange,
-    handleChange
-  } = useBlogOperations({
-    formData,
-    setFormData,
-    blogToEdit,
-    navigate,
-    setIsSubmitting,
-    setApiError
-  });
-
   useEffect(() => {
     if (blogToEdit) {
       setFormData({
         title: blogToEdit.title || "",
-        content: blogToEdit.body || "",
+        content: blogToEdit.body || blogToEdit.content || "",
         author: blogToEdit.author || "",
         allowComments: blogToEdit.allowComments ?? true,
         image: null,
         category: blogToEdit.category || 'Technology',
+        publishDate: blogToEdit.publishDate || new Date().toISOString(),
       });
     }
   }, [blogToEdit]);
+
+  const handleChange = (e) => {
+    const { name, value, checked, type } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData(prev => ({
+        ...prev,
+        image: file
+      }));
+    }
+  };
+
+  const handleEditorChange = (content) => {
+    setFormData(prev => ({
+      ...prev,
+      content
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setApiError(null);
+
+    try {
+      const selectedAuthor = authors.find(a => a.name === formData.author);
+      const blogId = blogToEdit?.id || (100 + Math.floor(Math.random() * 900)).toString();
+      const blogData = {
+        ...formData,
+        body: formData.content, // Ensure body field is set for detail page
+        id: blogId, // Generate ID between 100-999
+        createdAt: blogToEdit?.createdAt || new Date().toISOString(),
+        publishDate: new Date().toISOString(),
+        author: formData.author, // Ensure author name is set
+        authorId: selectedAuthor?.id || '',
+        authorImage: selectedAuthor?.image || `https://i.pravatar.cc/150?img=${blogId % 10 + 1}`,
+        imageUrl: formData.image ? URL.createObjectURL(formData.image) : blogToEdit?.imageUrl || '',
+      };
+
+      if (blogToEdit) {
+        await updateBlog(blogToEdit.id, blogData);
+      } else {
+        await createBlog(blogData);
+      }
+
+      navigate('/blog');
+    } catch (error) {
+      console.error('Error saving blog:', error);
+      setApiError(error.message || 'Failed to save blog. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <Container maxWidth="md" sx={{ py: 6 }}>
@@ -127,7 +172,7 @@ const CreateBlog = () => {
             {blogToEdit ? "Edit Blog Post" : "Create New Blog Post"}
           </Typography>
 
-          <form onSubmit={handleBlogSubmit}>
+          <form onSubmit={handleSubmit}>
             <Box
               sx={{
                 display: "flex",
@@ -184,6 +229,16 @@ const CreateBlog = () => {
                           objectFit: "cover",
                         }}
                       />
+                    ) : blogToEdit?.imageUrl ? (
+                      <img
+                        src={blogToEdit.imageUrl}
+                        alt="Current"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
                     ) : (
                       <Typography variant="body2" color="text.secondary">
                         Click to upload image
@@ -226,21 +281,24 @@ const CreateBlog = () => {
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                 />
 
-                <TextField
-                  fullWidth
-                  label="Author"
-                  name="author"
-                  value={formData.author}
-                  onChange={handleChange}
-                  required
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      "&:hover fieldset": {
-                        borderColor: "primary.main",
-                      },
-                    },
-                  }}
-                />
+                <FormControl fullWidth>
+                  <InputLabel id="author-label">Author</InputLabel>
+                  <Select
+                    labelId="author-label"
+                    id="author"
+                    name="author"
+                    value={formData.author}
+                    onChange={handleChange}
+                    label="Author"
+                    required
+                  >
+                    {authors.map((author) => (
+                      <MenuItem key={author.name} value={author.name}>
+                        {author.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
 
                 <FormControl fullWidth sx={{ mb: 3 }}>
                   <InputLabel id="category-label">Category</InputLabel>
@@ -252,7 +310,7 @@ const CreateBlog = () => {
                     onChange={handleChange}
                     label="Category"
                   >
-                    {categories && categories.map((category) => (
+                    {categories.map((category) => (
                       <MenuItem key={category} value={category}>
                         {category}
                       </MenuItem>
@@ -260,130 +318,70 @@ const CreateBlog = () => {
                   </Select>
                 </FormControl>
 
+                <Box sx={{ mb: 3 }}>
+                  <Editor
+                    apiKey={import.meta.env.VITE_TINYMCE_API_KEY}
+                    value={formData.content}
+                    onEditorChange={handleEditorChange}
+                    init={{
+                      height: 300,
+                      menubar: false,
+                      plugins: [
+                        "advlist autolink lists link image charmap print preview anchor",
+                        "searchreplace visualblocks code fullscreen",
+                        "insertdatetime media table paste code help wordcount",
+                      ],
+                      toolbar:
+                        "undo redo | formatselect | bold italic backcolor | \
+                        alignleft aligncenter alignright alignjustify | \
+                        bullist numlist outdent indent | removeformat | help",
+                    }}
+                  />
+                </Box>
+
                 <FormControlLabel
                   control={
                     <Checkbox
                       checked={formData.allowComments}
                       onChange={handleChange}
                       name="allowComments"
-                      color="primary"
                     />
                   }
                   label="Allow Comments"
                 />
 
-                {/* Rich Text Editor */}
-                <Box sx={{ mt: 1 }}>
-                  <Editor
-                    key={blogToEdit ? blogToEdit.id : "new"}
-                    apiKey={import.meta.env.VITE_TINYMCE_API_KEY}
-                    value={formData.content}
-                    init={{
-                      height: 400,
-                      menubar: true,
-                      plugins: [
-                        "advlist",
-                        "autolink",
-                        "lists",
-                        "link",
-                        "image",
-                        "charmap",
-                        "preview",
-                        "anchor",
-                        "searchreplace",
-                        "visualblocks",
-                        "code",
-                        "fullscreen",
-                        "insertdatetime",
-                        "media",
-                        "table",
-                        "code",
-                        "help",
-                        "wordcount",
-                      ],
-                      toolbar: `
-      undo redo | formatselect |
-      bold italic underline strikethrough | forecolor backcolor |
-      alignleft aligncenter alignright alignjustify |
-      bullist numlist outdent indent |
-      link image media table blockquote |
-      code preview fullscreen | removeformat | help
-    `,
-                      content_style:
-                        "body { font-family:Helvetica,Arial,sans-serif; font-size:16px }",
-                      forced_root_block: 'p',
-                      remove_script_host: true,
-                      convert_urls: true,
-                      paste_as_text: false,
-                      paste_word_valid_elements: "p,b,strong,i,em,h1,h2,h3,h4,h5,h6,ul,ol,li,a[href],span,img[src]",
-                      paste_retain_style_properties: "none",
-                      paste_remove_styles: true,
-                      paste_remove_styles_if_webkit: true,
-                      paste_strip_class_attributes: "all",
-                      paste_text_sticky: true,
-                      paste_text_sticky_default: true,
-                      paste_auto_cleanup_on_paste: true,
-                      paste_cleanup_paste: true,
-                      paste_cleanup_paste_on_paste: true,
-                      paste_cleanup_paste_on_paste_iframe: true,
-                      paste_cleanup_paste_on_paste_webkit: true,
-                      paste_cleanup_paste_on_paste_ie: true,
-                      paste_cleanup_paste_on_paste_gecko: true,
-                      paste_cleanup_paste_on_paste_old: true,
-                      paste_cleanup_paste_on_paste_new: true,
-                      paste_cleanup_paste_on_paste_all: true,
-                    }}
-                    onEditorChange={(content) => {
-                      handleEditorChange(content);
-                    }}
-                  />
-                </Box>
+                {apiError && (
+                  <Alert severity="error" sx={{ mb: 2 }}>
+                    {apiError}
+                  </Alert>
+                )}
 
-                <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
+                  <Button
+                    variant="outlined"
+                    onClick={() => navigate("/blog")}
+                    sx={{ minWidth: 120 }}
                   >
-                    <Button
-                    //   type="submit"
-                      variant="contained"
-                      size="large"
-                      disabled={isSubmitting}
-                      onClick={handleBlogSubmit}
-                      sx={{
-                        px: 6,
-                        py: 1.5,
-                        borderRadius: 2,
-                        fontSize: "1.1rem",
-                        fontWeight: 600,
-                        textTransform: "none",
-                        boxShadow: "0 4px 14px rgba(0,0,0,0.1)",
-                        transition: "all 0.3s ease",
-                        "&:hover": {
-                          transform: "translateY(-2px)",
-                          boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
-                        },
-                      }}
-                    >
-                      {isSubmitting ? (
-                        <CircularProgress size={24} color="inherit" />
-                      ) : blogToEdit ? (
-                        "Update Blog Post"
-                      ) : (
-                        "Create Blog Post"
-                      )}
-                    </Button>
-                  </motion.div>
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={isSubmitting}
+                    sx={{ minWidth: 120 }}
+                  >
+                    {isSubmitting ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : blogToEdit ? (
+                      "Update"
+                    ) : (
+                      "Create"
+                    )}
+                  </Button>
                 </Box>
               </Box>
             </Box>
           </form>
-
-          {(apiError) && (
-            <Alert severity="error" sx={{ mt: 3 }}>
-              {apiError}
-            </Alert>
-          )}
         </Paper>
       </motion.div>
     </Container>

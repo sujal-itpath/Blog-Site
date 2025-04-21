@@ -1,62 +1,56 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useGetBlogByIdQuery } from '../../redux/api/blogApiSlice';
-import { useSelector } from 'react-redux';
-import { selectAuthors } from '../../redux/api/authorSlice';
+import { useAuthor } from '../../context/AuthorContext';
+import { useBlog } from '../../context/BlogContext';
 import {
   Container,
+  Paper,
   Typography,
   Box,
-  Paper,
-  Avatar,
-  Divider,
-  CircularProgress,
   Button,
+  Avatar,
+  Chip,
+  Divider,
   List,
   ListItem,
   ListItemAvatar,
   ListItemText,
-  Chip,
+  CircularProgress,
 } from '@mui/material';
-import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-
-// Helper function to get author for a blog
-const getAuthorForBlog = (blogId, authors) => {
-  if (!authors?.length) return null;
-  const index = Math.abs(blogId) % authors.length;
-  return authors[index];
-};
-
-// Helper function to get local blog
-const getLocalBlog = (id) => {
-  const localBlogs = JSON.parse(localStorage.getItem('localBlogs') || '[]');
-  return localBlogs.find(blog => blog.id === parseInt(id));
-};
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const BlogDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const authors = useSelector(selectAuthors);
-  const [localBlog, setLocalBlog] = useState(null);
-  const [isLocalBlog, setIsLocalBlog] = useState(false);
-  
-  // Only fetch from API if it's not a local blog
-  const { data: apiBlog, isLoading: isLoadingApi, error: apiError } = useGetBlogByIdQuery(
-    parseInt(id) <= 100 ? id : null
-  );
-  
-  const [comments, setComments] = React.useState([]);
-  const [loadingComments, setLoadingComments] = React.useState(true);
+  const { authors } = useAuthor();
+  const { getBlogById } = useBlog();
+  const [blog, setBlog] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [loadingComments, setLoadingComments] = useState(true);
 
   useEffect(() => {
-    // Check if this is a local blog
-    const blogId = parseInt(id);
-    if (blogId > 100) {
-      const blog = getLocalBlog(id);
-      setLocalBlog(blog);
-      setIsLocalBlog(true);
-    }
-  }, [id]);
+    const fetchBlog = async () => {
+      try {
+        setIsLoading(true);
+        const blogData = await getBlogById(id);
+        
+        if (blogData) {
+          setBlog(blogData);
+        } else {
+          setError('Blog not found');
+        }
+      } catch (err) {
+        setError('Failed to fetch blog');
+        console.error('Error fetching blog:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBlog();
+  }, [id, getBlogById]);
 
   useEffect(() => {
     const fetchComments = async () => {
@@ -74,8 +68,7 @@ const BlogDetailPage = () => {
     fetchComments();
   }, [id]);
 
-  // Show loading state only for API blogs
-  if (!isLocalBlog && isLoadingApi) {
+  if (isLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
         <CircularProgress />
@@ -83,28 +76,16 @@ const BlogDetailPage = () => {
     );
   }
 
-  // Show error state only for API blogs
-  if (!isLocalBlog && apiError) {
+  if (error || !blog) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-        <Typography color="error">Error loading blog post</Typography>
+        <Typography color="error">{error || 'Blog not found'}</Typography>
       </Box>
     );
   }
 
-  // Get the blog data from either source
-  const blog = isLocalBlog ? localBlog : apiBlog;
-
-  if (!blog) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-        <Typography>Blog post not found</Typography>
-      </Box>
-    );
-  }
-
-  // Get author info from the authorSlice
-  const authorInfo = getAuthorForBlog(blog.id, authors);
+  // Get author info from the AuthorContext
+  const authorInfo = authors.find(author => author.name === blog.author) || authors[blog.userId % authors.length];
   const authorName = blog.author || authorInfo?.name || "Anonymous";
   const authorImage = authorInfo?.image || `https://i.pravatar.cc/150?img=${blog.id % 10 + 1}`;
 
@@ -175,7 +156,23 @@ const BlogDetailPage = () => {
           />
 
           <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>
-            {blog.body}
+            {blog.body 
+              ? blog.body.replace(/<[^>]*>/g, '')
+                .replace(/&nbsp;/g, ' ')
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"')
+                .replace(/&#39;/g, "'")
+              : blog.content 
+                ? blog.content.replace(/<[^>]*>/g, '')
+                  .replace(/&nbsp;/g, ' ')
+                  .replace(/&amp;/g, '&')
+                  .replace(/&lt;/g, '<')
+                  .replace(/&gt;/g, '>')
+                  .replace(/&quot;/g, '"')
+                  .replace(/&#39;/g, "'")
+                : 'No content available'}
           </Typography>
         </Box>
 

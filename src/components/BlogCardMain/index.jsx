@@ -52,9 +52,6 @@ const BlogCardMain = () => {
     if (location.state?.refresh) {
       // Clear the refresh state to prevent unnecessary refreshes
       window.history.replaceState({}, document.title);
-      
-      // Instead of reloading the page, we'll trigger a refetch
-      // This will be handled by the useGetBlogsQuery hook with refetchOnMountOrArgChange: true
     }
   }, [location.state]);
 
@@ -115,7 +112,10 @@ const BlogCardMain = () => {
 
       <DeleteConfirmationDialog
         open={deleteDialogOpen}
-        onClose={() => handleFilterModalClose()}
+        onClose={() => {
+          handleFilterModalClose();
+          handleDeleteClick(null);
+        }}
         onConfirm={handleDeleteConfirm}
         blogToDelete={blogToDelete}
       />

@@ -60,12 +60,7 @@ const CategoryFilterModal = ({
           )}
         </List>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClearFilters}>Clear Filters</Button>
-        <Button onClick={onClose} color="primary" variant="contained">
-          Apply
-        </Button>
-      </DialogActions>
+      
     </Dialog>
   );
 };
