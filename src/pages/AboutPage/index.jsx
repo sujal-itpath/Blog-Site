@@ -1,50 +1,84 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 
 const AboutPage = () => {
   return (
     <div className="max-w-4xl mx-auto px-6 py-16 text-gray-800">
-      <h1 className="text-4xl font-bold text-center mb-6">About Us ✨</h1>
+      <motion.h1
+        className="text-4xl font-bold text-center mb-6"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        About Us ✨
+      </motion.h1>
 
-      <p className="text-lg text-center mb-12 text-gray-600">
-        Welcome to <span className="font-semibold text-purple-600">Inkspire</span> – where thoughts turn into words, and words spark revolutions. 🖋️💭
-      </p>
+      <motion.p
+        className="text-lg text-center mb-12 text-gray-600"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3, duration: 0.6 }}
+      >
+        Welcome to <span className="font-semibold text-purple-600">Inkspire</span> – where thoughts turn into words, and words spark revolutions. 🖋️💭 Buckle up, buttercup.
+      </motion.p>
 
-      <div className="space-y-8">
-        <section>
+      <div className="space-y-10">
+        <motion.section
+          initial={{ opacity: 0, x: -40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <h2 className="text-2xl font-semibold mb-2">Who Are We? 🤔</h2>
           <p className="text-gray-700 leading-relaxed">
-            We're a bunch of caffeine-fueled keyboard warriors 🧠⚡ who believe every idea deserves a spotlight – even the ones you came up with in the shower. 🚿
+            We’re a band of keyboard-tapping dreamers fueled by caffeine, memes, and questionable life choices ☕💡. If you've ever written a novel in your head during a boring meeting — you're one of us.
           </p>
-        </section>
+        </motion.section>
 
-        <section>
+        <motion.section
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
           <h2 className="text-2xl font-semibold mb-2">Our Mission 🚀</h2>
           <p className="text-gray-700 leading-relaxed">
-            To provide a platform where creators, thinkers, and midnight snack philosophers 🍕🕛 can share their stories, spark conversations, and maybe even start a friendly debate or two (no chairs will be thrown... probably).
+            To be the megaphone for your inner monologue. Whether it’s deep thoughts at 3AM or a review of your favorite potato chip flavor — every voice matters. Especially yours, Crunchy Nacho.
           </p>
-        </section>
+        </motion.section>
 
-        <section>
+        <motion.section
+          initial={{ opacity: 0, x: -40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
           <h2 className="text-2xl font-semibold mb-2">Why Inkspire? 📝</h2>
           <p className="text-gray-700 leading-relaxed">
-            Because we believe your thoughts are worth more than just a scribble in a forgotten notebook. Whether you're a seasoned writer or just here to rant creatively – we got you. 💜
+            Because "Scribbly Thoughts Dot Com" was taken. But also, because we believe in unfiltered creativity — and we know that some of the best ideas come while you're holding a taco in one hand and your phone in the other 🌮📱.
           </p>
-        </section>
+        </motion.section>
 
-        <section>
+        <motion.section
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+        >
           <h2 className="text-2xl font-semibold mb-2">Fun Fact 🎉</h2>
           <p className="text-gray-700 leading-relaxed">
-            Every time someone publishes a blog here, somewhere in the world a cat walks over a keyboard and accidentally creates a masterpiece. 🐱⌨️
+            Every time someone hits “publish” on a blog, a unicorn somewhere sneezes glitter and a WiFi signal improves. Coincidence? We think not. 🦄✨📶
           </p>
-        </section>
+        </motion.section>
       </div>
 
-      <div className="mt-16 text-center">
+      <motion.div
+        className="mt-16 text-center"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8, duration: 0.6 }}
+      >
         <p className="text-lg text-gray-600">
-          So go ahead — <span className="font-semibold text-purple-600">write, read, laugh, cry, repeat</span>. This is your space.
+          So go ahead — <span className="font-semibold text-purple-600">write, read, laugh, cry, repeat</span>. This is your playground.
         </p>
-        <p className="mt-2 text-purple-700 text-sm italic">— Team Inkspire 💡</p>
-      </div>
+        <p className="mt-2 text-purple-700 text-sm italic">— Team Inkspire 💡 (Official members of the “Accidentally funny but lowkey profound” club)</p>
+      </motion.div>
     </div>
   );
 };
