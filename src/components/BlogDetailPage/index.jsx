@@ -143,7 +143,7 @@ const BlogDetailPage = () => {
 
           <Box
             component="img"
-            src={blog.image || `https://picsum.photos/seed/${blog.id}/800/400`}
+            src={blog.imageUrl || blog.image || `https://picsum.photos/seed/${blog.id}/800/400`}
             alt={blog.title}
             sx={{
               width: '100%',
@@ -152,6 +152,11 @@ const BlogDetailPage = () => {
               objectFit: 'cover',
               borderRadius: 2,
               mb: 4,
+              display: 'block',
+              margin: '0 auto',
+            }}
+            onError={(e) => {
+              e.target.src = `https://picsum.photos/seed/${blog.id}/800/400`;
             }}
           />
 

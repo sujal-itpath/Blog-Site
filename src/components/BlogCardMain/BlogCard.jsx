@@ -78,6 +78,9 @@ const BlogCard = ({ blog, index, onDelete }) => {
               image={image}
               alt={blog.title}
               className="object-cover h-full w-full transition-transform duration-300 group-hover:scale-120"
+              onError={(e) => {
+                e.target.src = `https://picsum.photos/seed/${blog.id}/800/400`;
+              }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
             
@@ -205,6 +208,9 @@ const BlogCard = ({ blog, index, onDelete }) => {
                     src={authorImage}
                     alt={authorName}
                     className="w-8 h-8 rounded-full object-cover"
+                    onError={(e) => {
+                      e.target.src = `https://i.pravatar.cc/150?img=${blog.id % 10 + 1}`;
+                    }}
                   />
                   <Typography
                     variant="caption"

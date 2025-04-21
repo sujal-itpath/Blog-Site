@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useBlog } from "../../context/BlogContext";
 
 export const useBlogOperations = ({
@@ -26,9 +27,11 @@ export const useBlogOperations = ({
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      const imageUrl = URL.createObjectURL(file);
       setFormData((prev) => ({
         ...prev,
         image: file,
+        imageUrl: imageUrl,
       }));
     }
   };
@@ -57,13 +60,11 @@ export const useBlogOperations = ({
       author: formData.author,
       publishDate: new Date().toISOString(),
       allowComments: formData.allowComments,
-      image: formData.image
-        ? URL.createObjectURL(formData.image)
-        : `https://picsum.photos/seed/${maxId + 1}/800/400`,
+      imageUrl: formData.imageUrl || `https://picsum.photos/seed/${maxId + 1}/800/400`,
       category: formData.category,
       isLocal: true,
       createdAt: new Date().toISOString(),
-      userId: Math.floor(Math.random() * 20) + 1, // Random userId between 1 and 20
+      userId: Math.floor(Math.random() * 20) + 1,
       isNew: true,
     };
   };
@@ -92,9 +93,7 @@ export const useBlogOperations = ({
           author: formData.author,
           publishDate: new Date().toISOString(),
           allowComments: formData.allowComments,
-          image: formData.image
-            ? URL.createObjectURL(formData.image)
-            : blogToEdit.image,
+          imageUrl: formData.imageUrl || blogToEdit.imageUrl || `https://picsum.photos/seed/${blogToEdit.id}/800/400`,
           category: formData.category,
           isLocal: true,
         };
